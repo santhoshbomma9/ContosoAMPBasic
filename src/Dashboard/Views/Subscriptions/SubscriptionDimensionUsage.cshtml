@@ -1,0 +1,91 @@
+﻿@model Dashboard.Models.DimensionViewModel
+
+@{
+    ViewData["Title"] = "SubscriptionDimensionUsage";
+}
+
+<h1>Subscription Dimension Usage</h1>
+
+<h4>@Model.SubscriptionName</h4>
+<hr />
+<div class="row">
+    <div class="col-sm-12">
+        <form asp-action="SendDimensionUsage" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="row">
+                <div class="col-sm-4 form-group">
+                    <label asp-for="SubscriptionId" class="control-label"></label>
+                    <input asp-for="SubscriptionId" class="form-control" readonly />
+                    <span asp-validation-for="SubscriptionId" class="text-danger"></span>
+                </div>
+                <div class="col-sm-4 form-group">
+                    <label asp-for="OfferId" class="control-label"></label>
+                    <input asp-for="OfferId" class="form-control" readonly />
+                    <span asp-validation-for="OfferId" class="text-danger"></span>
+                </div>
+                <div class="col-sm-4 form-group">
+                    <label asp-for="PlanId" class="control-label"></label>
+                    <input asp-for="PlanId" class="form-control" readonly />
+                    <span asp-validation-for="PlanId" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-4 form-group">
+                    <label asp-for="SelectedDimension" class="control-label"></label>
+                    <select asp-for="SelectedDimension" asp-items="@(new SelectList(Model.SubscriptionDimensions))" class="form-control">
+                        <option value="">Choose a dimension</option>
+                    </select>
+                    <span asp-validation-for="SelectedDimension" class="text-danger"></span>
+                </div>
+                <div class="col-sm-4 form-group">
+                    <label asp-for="Quantity" class="control-label"></label>
+                    <input asp-for="Quantity" class="form-control" min="1" />
+                    <span asp-validation-for="Quantity" class="text-danger"></span>
+                </div>
+                <div class="col-sm-4 form-group">
+                    <label asp-for="EventTime" class="control-label"></label>
+                    <input asp-for="EventTime" class="form-control" />
+                    <span asp-validation-for="EventTime" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Send Usage" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to Dashboard</a>
+</div>
+
+<hr class="mt-3 mb-3" />
+
+<h1 class="display-4">Past sent usage events</h1>
+<table class="table table-striped table-bordered table-hover">
+    <tr>
+        <th>Plan Id</th>
+        <th>Quantity</th>
+        <th>Dimension</th>
+        <th>Usage Event(UTC)</th>
+        <th>EventSentAt</th>
+        <th>Response</th>
+        <th>Response Message</th>
+    </tr>
+    {% for item in data.existingUsage %}
+    <tr>
+        <td>  {{ item.get('planId') }} </td>
+        <td>  {{ item.get('quantity') }} </td>
+        <td>  {{ item.get('selected_dimension') }} </td>
+        <td>  {{ item.get('utc_usage_datetime_object') }} </td>
+        <td>  {{ item.get('senttime') }} </td>
+        <td>  {{ item.get('response') }} </td>
+        <td>  {{ item.get('response_message') }} </td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

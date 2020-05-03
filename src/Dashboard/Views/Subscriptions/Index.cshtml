@@ -93,6 +93,18 @@
                         {
                             <span>Pending operations</span>
                         }
+                        @if (item.SubscriptionDimensionsExist)
+                        {
+                            <span> @Html.ActionLink("SendDimensionUsage", "SubscriptionDimensionUsage",
+                                  new DimensionViewModel
+                                  {
+                                      SubscriptionId = item.SubscriptionId,
+                                      SubscriptionName = item.SubscriptionName,
+                                      OfferId = item.OfferId,
+                                      PlanId = item.PlanId
+                                  }) 
+                            </span>
+                        }
                     </td>
                     <td>
                         @if (item.ExistingOperations)

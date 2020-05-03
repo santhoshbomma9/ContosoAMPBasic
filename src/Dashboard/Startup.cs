@@ -108,10 +108,11 @@
                     });
 
             services.Configure<DashboardOptions>(this.configuration.GetSection("Dashboard"));
+            services.Configure<DimensionOptions>(this.configuration.GetSection("FulfillmentClient:DimensionData"));
 
             services.AddFulfillmentClient(options => this.configuration.Bind("FulfillmentClient", options))
                 .WithAzureTableOperationsStore(this.configuration["FulfillmentClient:OperationsStoreConnectionString"]);
-
+            
             // Hack to save the host name and port during the handling the request. Please see the WebhookController and ContosoWebhookHandler implementations
             services.AddSingleton<ContosoWebhookHandlerOptions>();
 

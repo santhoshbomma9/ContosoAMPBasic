@@ -11,6 +11,7 @@
 
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.AspNetCore.Mvc.Rendering;
     using Microsoft.Extensions.Options;
 
     using SaaSFulfillmentClient;
@@ -21,18 +22,26 @@
     {
         private readonly IFulfillmentClient fulfillmentClient;
 
+        private readonly ICustomMeteringClient customMeteringClient;
+
         private readonly IOperationsStore operationsStore;
 
         private readonly DashboardOptions options;
 
+        private readonly DimensionOptions optionsDim;
+
         public SubscriptionsController(
             IFulfillmentClient fulfillmentClient,
+            ICustomMeteringClient customMeteringClient,
             IOperationsStore operationsStore,
-            IOptionsMonitor<DashboardOptions> options)
+            IOptionsMonitor<DashboardOptions> options,
+            IOptionsMonitor<DimensionOptions> optionsDim)
         {
             this.fulfillmentClient = fulfillmentClient;
+            this.customMeteringClient = customMeteringClient;
             this.operationsStore = operationsStore;
             this.options = options.CurrentValue;
+            this.optionsDim = optionsDim.CurrentValue;
         }
 
         [AllowAnonymous]
@@ -100,6 +109,12 @@
                     subscription.SubscriptionId,
                     cancellationToken)).Any();
                 subscription.OperationCount = recordedSubscriptionOperations.Count();
+
+                //check if dimensions exist for plan
+                subscription.SubscriptionDimensionsExist = ((optionsDim.Offers.Where(O => O.OfferId == subscription.OfferId).FirstOrDefault())?
+                                                            .Plans.Exists(P => P.PlanId == subscription.PlanId) ?? false)
+                                                            && subscription.State == StatusEnum.Subscribed;
+                
                 newViewModel.Add(subscription);
             }            
 
@@ -223,6 +238,42 @@
                                    model.NewPlan,
                                    requestId,
                                    correlationId,
+                                   cancellationToken);
+
+            return updateResult.Success ? this.RedirectToAction("Index") : this.Error();
+        }
+
+        public async Task<IActionResult> SubscriptionDimensionUsage(
+            DimensionViewModel dimensionViewModel,
+
+            CancellationToken cancellationToken)
+        {
+            //load dimensions
+            dimensionViewModel.SubscriptionDimensions = optionsDim.Offers.FirstOrDefault(O => O.OfferId == dimensionViewModel.OfferId)?
+                                                            .Plans.FirstOrDefault(P => P.PlanId == dimensionViewModel.PlanId)?.Dimensions;
+            return this.View(dimensionViewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SendDimensionUsage(
+            DimensionViewModel model,
+            CancellationToken cancellationToken)
+        {
+            var requestId = Guid.NewGuid();
+            var correlationId = Guid.NewGuid();
+
+            var usage = new Usage()
+            {
+                ResourceId = model.SubscriptionId.ToString(),
+                PlanId = model.PlanId,
+                Dimension = model.SelectedDimension,
+                Quantity = model.Quantity,
+                EffectiveStartTime = model.EventTime.ToString()
+            };
+            var updateResult = await this.customMeteringClient.RecordUsageAsync(
+                                   requestId,
+                                   correlationId,
+                                   usage,
                                    cancellationToken);
 
             return updateResult.Success ? this.RedirectToAction("Index") : this.Error();

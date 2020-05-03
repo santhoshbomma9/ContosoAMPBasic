@@ -64,5 +64,6 @@ namespace Dashboard.Models
         public string PurchaserEmail { get; set; }
         public bool ExistingOperations { get; internal set; }
         public int OperationCount { get; internal set; }
+        public bool SubscriptionDimensionsExist { get; set; }
     }
 }
