@@ -46,6 +46,18 @@
                 cancellationToken);
         }
 
+        public async Task NotifyChangeQuantityAsync(
+            NotificationModel notificationModel,
+            CancellationToken cancellationToken = default)
+        {
+            await this.SendWebhookNotificationEmailAsync(
+                "Plan change request complete",
+                "Plan change request complete. Please take the required action.",
+                string.Empty,
+                notificationModel,
+                cancellationToken);
+        }
+
         public async Task ProcessActivateAsync(
             AzureSubscriptionProvisionModel provisionModel,
             CancellationToken cancellationToken = default)
@@ -61,8 +73,16 @@
             var emailText =
                 "<p>New subscription. Please take the required action, then return to this email and click the following link to confirm. ";
             emailText += $"{this.BuildALink("Activate", queryParams, "Click here to activate subscription")}.</p>";
+            var jsonObject = JObject.Parse(JsonConvert.SerializeObject(provisionModel));
+            jsonObject.Remove("NewPlanId");
+            jsonObject.Remove("NewQuantity");
+            if(provisionModel.Quantity <= 0)
+            {
+                jsonObject.Remove("Quantity");
+            }   
+            jsonObject.Remove("AvailablePlans");
             emailText +=
-                $"<div> <p> Details are</p> <div> {this.BuildTable(JObject.Parse(JsonConvert.SerializeObject(provisionModel)))}</div></div>";
+                $"<div> <p> Details are</p> <div> {this.BuildTable(jsonObject)}</div></div>";
 
             await this.SendEmailAsync(
                 () => $"New subscription, {provisionModel.SubscriptionName}",
@@ -87,8 +107,15 @@
             emailText +=
                 "Please take the required action, then return to this email and click the following link to confirm. ";
             emailText += $"{this.BuildALink("Update", queryParams, "Click here to update subscription")}.</p>";
+            var jsonObject = JObject.Parse(JsonConvert.SerializeObject(provisionModel));
+            jsonObject.Remove("AvailablePlans");
+            jsonObject.Remove("NewQuantity");
+            if (provisionModel.Quantity <= 0)
+            {
+                jsonObject.Remove("Quantity");
+            }
             emailText +=
-                $"<div> <p> Details are</p> <div> {this.BuildTable(JObject.Parse(JsonConvert.SerializeObject(provisionModel)))}</div></div>";
+                $"<div> <p> Details are</p> <div> {this.BuildTable(jsonObject)}</div></div>";
 
             await this.SendEmailAsync(
                 () => $"Update subscription, {provisionModel.SubscriptionName}",
@@ -97,14 +124,31 @@
         }
 
         public async Task ProcessChangeQuantityAsync(
-            NotificationModel notificationModel,
+            AzureSubscriptionProvisionModel provisionModel,
             CancellationToken cancellationToken = default)
         {
-            await this.SendWebhookNotificationEmailAsync(
-                "Quantity change request",
-                "Quantity change request. Please take the required action.",
-                string.Empty,
-                notificationModel,
+            var queryParams = new List<Tuple<string, string>>
+                                  {
+                                      new Tuple<string, string>(
+                                          "subscriptionId",
+                                          provisionModel.SubscriptionId.ToString()),
+                                      new Tuple<string, string>("Quantity", provisionModel.NewQuantity.ToString())
+                                  };
+
+            var emailText = $"<p>Updated subscription quantity from {provisionModel.Quantity} to {provisionModel.NewQuantity}.";
+
+            emailText +=
+                "Please take the required action, then return to this email and click the following link to confirm. ";
+            emailText += $"{this.BuildALink("UpdateQuantity", queryParams, "Click here to update subscription quantity")}.</p>";
+            var jsonObject = JObject.Parse(JsonConvert.SerializeObject(provisionModel));
+            jsonObject.Remove("AvailablePlans");
+            jsonObject.Remove("NewPlanId");
+            emailText +=
+                $"<div> <p> Details are</p> <div> {this.BuildTable(jsonObject)}</div></div>";
+
+            await this.SendEmailAsync(
+                () => $"Update subscription quantity, {provisionModel.SubscriptionName}",
+                () => emailText,
                 cancellationToken);
         }
 

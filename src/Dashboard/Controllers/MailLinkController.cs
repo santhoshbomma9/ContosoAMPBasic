@@ -16,10 +16,13 @@
     public class MailLinkController : Controller
     {
         private readonly IFulfillmentClient fulfillmentClient;
+        private readonly IOperationsStore operationsStore;
 
-        public MailLinkController(IFulfillmentClient fulfillmentClient)
+        public MailLinkController(IFulfillmentClient fulfillmentClient,
+                                  IOperationsStore operationsStore)
         {
             this.fulfillmentClient = fulfillmentClient;
+            this.operationsStore = operationsStore;
         }
 
         [HttpGet]
@@ -107,6 +110,31 @@
                                {
                                    SubscriptionId = notificationModel.SubscriptionId, PlanId = notificationModel.PlanId
                                })
+                       : this.View("MailActionError", FulfillmentRequestErrorViewModel.From(result));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> UpdateQuantity(NotificationModel notificationModel)
+        {
+            var result = await this.fulfillmentClient.UpdateSubscriptionQuantityAsync(
+                             notificationModel.SubscriptionId,
+                             notificationModel.Quantity,
+                             Guid.Empty,
+                             Guid.Empty,
+                             CancellationToken.None);
+            
+            if (this.operationsStore != default)
+            {
+                await this.operationsStore.RecordAsync(notificationModel.SubscriptionId, result, new CancellationToken());
+            }
+
+            return result.Success
+                       ? this.View("Update",
+                           new ActivateActionViewModel
+                           {
+                               SubscriptionId = notificationModel.SubscriptionId,
+                               Quantity = notificationModel.Quantity
+                           })
                        : this.View("MailActionError", FulfillmentRequestErrorViewModel.From(result));
         }
 

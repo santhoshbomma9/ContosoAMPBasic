@@ -42,13 +42,14 @@ namespace Dashboard.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Index(
             AzureSubscriptionProvisionModel provisionModel,
+            string action,
             CancellationToken cancellationToken)
         {
             var urlBase = $"{this.Request.Scheme}://{this.Request.Host}";
             this.options.BaseUrl = urlBase;
             try
             {
-                await this.ProcessLandingPageAsync(provisionModel, cancellationToken);
+                await this.ProcessLandingPageAsync(provisionModel, action, cancellationToken);
 
                 return this.RedirectToAction(nameof(this.Success));
             }
@@ -118,6 +119,7 @@ namespace Dashboard.Controllers
             var provisioningModel = new AzureSubscriptionProvisionModel
             {
                 PlanId = resolvedSubscription.PlanId,
+                Quantity = resolvedSubscription.Quantity,
                 SubscriptionId = resolvedSubscription.SubscriptionId,
                 OfferId = resolvedSubscription.OfferId,
                 SubscriptionName = resolvedSubscription.SubscriptionName,
@@ -143,19 +145,21 @@ namespace Dashboard.Controllers
 
         private async Task ProcessLandingPageAsync(
             AzureSubscriptionProvisionModel provisionModel,
+            string action,
             CancellationToken cancellationToken)
         {
             // A new subscription will have PendingFulfillmentStart as status
-            if (provisionModel.SubscriptionStatus != StatusEnum.Subscribed)
-            {
-                
+            if (provisionModel.SubscriptionStatus == StatusEnum.PendingFulfillmentStart && action == "Request Activate") {
                 await this.notificationHandler.ProcessActivateAsync(provisionModel, cancellationToken);
-                
             }
-            else
-            {
+            else if (provisionModel.SubscriptionStatus == StatusEnum.Subscribed && action.Contains("Plan")) {
                 await this.notificationHandler.ProcessChangePlanAsync(provisionModel, cancellationToken);
             }
+            else if (provisionModel.SubscriptionStatus == StatusEnum.Subscribed && action.Contains("Quantity")) { 
+                await this.notificationHandler.ProcessChangeQuantityAsync(provisionModel, cancellationToken);
+            }
+                
+
         }
     }
 }

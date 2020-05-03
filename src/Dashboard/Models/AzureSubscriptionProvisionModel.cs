@@ -28,6 +28,9 @@
         [BindProperty]
         public string NewPlanId { get; set; }
 
+        [BindProperty]
+        public int NewQuantity { get; set; }
+
         [Display(Name = "Offer ID")]
         public string OfferId { get; set; }
 
@@ -35,6 +38,10 @@
 
         [Display(Name = "Current plan")]
         public string PlanId { get; set; }
+
+        [Display(Name = "Current quantity")]
+        [BindProperty]
+        public int Quantity { get; set; }
 
         [JsonConverter(typeof(StringEnumConverter))]
         public TargetContosoRegionEnum Region { get; set; }
@@ -52,5 +59,10 @@
 
         [Display(Name = "Purchaser AAD TenantId")]
         public Guid PurchaserTenantId { get; set; }
+
+        public string SubscritpionStatusName
+        {
+            get =>  this.SubscriptionStatus.ToString();
+        }
     }
 }

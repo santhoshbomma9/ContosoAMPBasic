@@ -36,8 +36,7 @@
             switch (payload.Status)
             {
                 case OperationStatusEnum.Succeeded:
-                    await this.notificationHelper.ProcessChangeQuantityAsync(
-                        NotificationModel.FromWebhookPayload(payload));
+                    await this.notificationHelper.NotifyChangeQuantityAsync(NotificationModel.FromWebhookPayload(payload));
                     break;
 
                 case OperationStatusEnum.Failed:

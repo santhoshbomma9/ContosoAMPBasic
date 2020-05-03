@@ -8,6 +8,7 @@
     public interface IMarketplaceNotificationHandler
     {
         Task NotifyChangePlanAsync(NotificationModel notificationModel, CancellationToken cancellationToken = default);
+        Task NotifyChangeQuantityAsync(NotificationModel notificationModel, CancellationToken cancellationToken = default);
 
         Task ProcessActivateAsync(
             AzureSubscriptionProvisionModel provisionModel,
@@ -18,7 +19,7 @@
             CancellationToken cancellationToken = default);
 
         Task ProcessChangeQuantityAsync(
-            NotificationModel notificationModel,
+            AzureSubscriptionProvisionModel provisionModel,
             CancellationToken cancellationToken = default);
 
         Task ProcessOperationFailOrConflictAsync(

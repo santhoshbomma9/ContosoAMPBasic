@@ -10,22 +10,27 @@
 <div class="table-responsive">
     <table class="table">
         <tbody>
-        <tr>
-            <td>
-                Subscription
-            </td>
-            <td>
-                <p>@Model.SubscriptionId</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                Plan
-            </td>
-            <td>
-                <p>@Model.PlanId</p>
-            </td>
-        </tr>
+            <tr>
+                <td>
+                    Subscription
+                </td>
+                <td>
+                    <p>@Model.SubscriptionId</p>
+                </td>
+            </tr>
+            @if(Model.Quantity <= 0){
+            <tr>
+                <td> Plan </td>
+                <td> <p>@Model.PlanId</p> </td>
+            </tr>
+            }
+            else
+            {
+            <tr>
+                <td> Quantity </td>
+                <td> <p>@Model.Quantity</p></td>
+            </tr>
+            }
         </tbody>
     </table>
 </div>

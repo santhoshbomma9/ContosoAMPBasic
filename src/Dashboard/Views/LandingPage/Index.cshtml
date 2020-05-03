@@ -62,6 +62,19 @@
                         </dd>
                     </div>
 
+                    @if (Model.Quantity > 0)
+                    {
+                        <div class="row">
+                            <dt class="col-sm-2">
+                                @Html.DisplayNameFor(model => model.Quantity)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Html.DisplayFor(model => model.Quantity)
+                                <input asp-for="Quantity" type="hidden" class="form-control" />
+                            </dd>
+                        </div>
+                    }
+
                     <div class="row">
                         <dt class="col-sm-2">
                             @Html.DisplayNameFor(model => model.PurchaserEmail)
@@ -88,36 +101,53 @@
                             <dt class="col-sm-2">
                                 @Html.DisplayNameFor(model => model.AvailablePlans)
                             </dt>
-
-                            <dd class="col-sm-10">
-
+                            <dd class="col-sm-4">
                                 <select asp-for="NewPlanId" asp-items="@(new SelectList(Model.AvailablePlans, "PlanId", "DisplayName"))" class="form-control">
                                     <option value="">Choose a new plan, or plan you wish to be on.</option>
                                 </select>
                             </dd>
+                            <dd class="col-sm-6">
+                                <input type="submit" name="action" value="Request Change Plan" class="btn btn-primary" />
+                            </dd>
                         </div>
+
+                        @if (Model.Quantity > 0)
+                        {
+                        
+                            <div class="row">
+                                <dt class="col-sm-2">
+                                    @Html.DisplayNameFor(model => model.NewQuantity)
+                                </dt>
+                                <dd class="col-sm-4">
+                                    @Html.EditorFor(model => model.NewQuantity, new { htmlAttributes = new { @class = "form-control" } })
+                                </dd>
+                                <dd class="col-sm-6">
+                                    <input type="submit" name="action" value="Request Change Quantity" class="btn btn-primary" />
+                                </dd>
+                            </div>
+                        }
                     }
 
-                    <div class="row">
-                        <dt class="col-sm-2">
-                            @Html.DisplayNameFor(model => model.SubscriptionId)
-                        </dt>
-                        <dd class="col-sm-10">
-                            @Html.DisplayFor(model => model.SubscriptionId)
-                            <input asp-for="SubscriptionId" type="hidden" class="form-control" />
-                        </dd>
-                    </div>
+                        <div class="row">
+                            <dt class="col-sm-2">
+                                @Html.DisplayNameFor(model => model.SubscriptionId)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Html.DisplayFor(model => model.SubscriptionId)
+                                <input asp-for="SubscriptionId" type="hidden" class="form-control" />
+                            </dd>
+                        </div>
 
-                    <div class="row">
-                        <dt class="col-sm-2">
-                            @Html.DisplayNameFor(model => model.SubscriptionName)
-                        </dt>
-                        <dd class="col-sm-10">
-                            @Html.DisplayFor(model => model.SubscriptionName)
-                            <input asp-for="SubscriptionName" type="hidden" class="form-control" />
-                        </dd>
+                        <div class="row">
+                            <dt class="col-sm-2">
+                                @Html.DisplayNameFor(model => model.SubscriptionName)
+                            </dt>
+                            <dd class="col-sm-8">
+                                @Html.DisplayFor(model => model.SubscriptionName)
+                                <input asp-for="SubscriptionName" type="hidden" class="form-control" />
+                            </dd>
+                        </div>
                     </div>
-                </div>
                 <div class="panel panel-default">
                     <div class="row">
                         <dt class="col-sm-2">
@@ -154,8 +184,9 @@
         <input asp-for="SubscriptionStatus" type="hidden" class="form-control" />
     </div>
     <div>
-        <input type="submit"
-               value="Submit"
-               class="btn btn-primary" />
+        @if (Model.SubscriptionStatus == StatusEnum.PendingFulfillmentStart)
+        {
+            <input type="submit" name="action" value="Request Activate" class="btn btn-primary" />
+        }
     </div>
 </form>

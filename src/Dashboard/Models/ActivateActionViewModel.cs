@@ -6,6 +6,8 @@
     {
         public string PlanId { get; set; }
 
+        public int Quantity { get; set; }
+
         public Guid SubscriptionId { get; set; }
     }
 }
