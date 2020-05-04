@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using SaaSFulfillmentClient.AzureTable;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -27,5 +28,7 @@ namespace Dashboard.Models
         [DisplayName("Event Time In UTC")]
         public DateTime EventTime { get; set; }
         //public int MyProperty { get; set; }
+
+        public IEnumerable<DimensionUsageRecord> PastUsageEvents { get; set; }
     }
 }

@@ -26,6 +26,8 @@
 
         private readonly IOperationsStore operationsStore;
 
+        private readonly IDimensionStore dimensionStore;
+
         private readonly DashboardOptions options;
 
         private readonly DimensionOptions optionsDim;
@@ -34,12 +36,14 @@
             IFulfillmentClient fulfillmentClient,
             ICustomMeteringClient customMeteringClient,
             IOperationsStore operationsStore,
+            IDimensionStore dimensionStore,
             IOptionsMonitor<DashboardOptions> options,
             IOptionsMonitor<DimensionOptions> optionsDim)
         {
             this.fulfillmentClient = fulfillmentClient;
             this.customMeteringClient = customMeteringClient;
             this.operationsStore = operationsStore;
+            this.dimensionStore = dimensionStore;
             this.options = options.CurrentValue;
             this.optionsDim = optionsDim.CurrentValue;
         }
@@ -243,19 +247,42 @@
             return updateResult.Success ? this.RedirectToAction("Index") : this.Error();
         }
 
+        [HttpGet]
         public async Task<IActionResult> SubscriptionDimensionUsage(
-            DimensionViewModel dimensionViewModel,
-
+            Guid subscriptionId,
+            bool? UpdateResult,
             CancellationToken cancellationToken)
         {
-            //load dimensions
-            dimensionViewModel.SubscriptionDimensions = optionsDim.Offers.FirstOrDefault(O => O.OfferId == dimensionViewModel.OfferId)?
-                                                            .Plans.FirstOrDefault(P => P.PlanId == dimensionViewModel.PlanId)?.Dimensions;
+            var requestId = Guid.NewGuid();
+            var correlationId = Guid.NewGuid();
+            var subscription = await this.fulfillmentClient.GetSubscriptionAsync(
+                                   subscriptionId,
+                                   requestId,
+                                   correlationId,
+                                   cancellationToken);
+            var dimensionViewModel = new DimensionViewModel()
+            {
+                SubscriptionId = subscriptionId,
+                OfferId = subscription.OfferId,
+                PlanId = subscription.PlanId,
+                SubscriptionDimensions = optionsDim.Offers.FirstOrDefault(O => O.OfferId == subscription.OfferId)?
+                                                            .Plans.FirstOrDefault(P => P.PlanId == subscription.PlanId)?.Dimensions,
+                EventTime = DateTime.Now,
+                PastUsageEvents =
+                    await this.dimensionStore.GetAllDimensionRecordsAsync(
+                        subscription.SubscriptionId,
+                        cancellationToken)
+            };
+
+            if (UpdateResult != null && !(bool)UpdateResult)
+            {
+                ViewBag.UpdateError = "Unable to sent dimension usage, please see logs!";
+            }
             return this.View(dimensionViewModel);
         }
 
         [HttpPost]
-        public async Task<IActionResult> SendDimensionUsage(
+        public async Task<IActionResult> SubscriptionDimensionUsage(
             DimensionViewModel model,
             CancellationToken cancellationToken)
         {
@@ -276,7 +303,7 @@
                                    usage,
                                    cancellationToken);
 
-            return updateResult.Success ? this.RedirectToAction("Index") : this.Error();
+            return RedirectToAction("SubscriptionDimensionUsage", new { model.SubscriptionId, UpdateResult = updateResult.Success });            
         }
     }
 }
